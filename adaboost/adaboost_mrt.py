@@ -128,9 +128,15 @@ class AdaboostMRT:
             self.D_t = np.mean(self.D_y, axis=0).reshape(-1,self.m)
 
 
-        return 0
-
     def predict(self, X:np.array) -> np.array:
+        """Run ensemble prediction on input vector
+
+        Args:
+            X (np.array): input vector
+
+        Returns:
+            np.array: averaged ouput of the ensemble
+        """
         # Error checking on X input
         X = self.reshape_input(X)
 
@@ -145,14 +151,14 @@ class AdaboostMRT:
         """predicts individual learner or a list of the actual learners 
 
         Args:
-            X (np.array): [description]
-            learner_index (Union[int, List]): [description]
+            X (np.array): input vector
+            learner_index (Union[int, List]): index of learners to use
 
         Raises:
-            IndexError: [description]
+            IndexError: raised if index is outside num_iteration or 0
 
         Returns:
-            np.array: [description]
+            np.array: outputs prediction
         """
         if isinstance(learner_index, int):
             learner_index = [learner_index]
