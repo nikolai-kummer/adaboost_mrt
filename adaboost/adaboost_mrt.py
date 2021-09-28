@@ -141,4 +141,32 @@ class AdaboostMRT:
         return output/self.n_iterations
             
 
+    def predict_individual(self, X:np.array, learner_index: Union[int, List]) -> np.array:
+        """predicts individual learner or a list of the actual learners 
+
+        Args:
+            X (np.array): [description]
+            learner_index (Union[int, List]): [description]
+
+        Raises:
+            IndexError: [description]
+
+        Returns:
+            np.array: [description]
+        """
+        if isinstance(learner_index, int):
+            learner_index = [learner_index]
+        if max(learner_index) > self.n_iterations or min(learner_index) < 0 or len(learner_index)==0:
+            raise IndexError(f"Passed Index is out of bounds of [0, {self.n_iterations}]. Received: [{learner_index}]")
+
+        # Error checking on X input
+        X = self.reshape_input(X)
+
+        output = np.zeros(self._num_outputs,)
+        learner_array = [self._learner_array[idx] for idx in learner_index] 
+        for predictor in learner_array:
+            output = output + predictor.predict(X)
+
+        return output/len(learner_index)
+            
 
