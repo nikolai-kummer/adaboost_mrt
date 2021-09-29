@@ -71,7 +71,7 @@ class AdaboostMRT:
 
 
 
-    def fit(self, X: np.array, y: np.array, N:int,  phi:np.array = 0.1, n:float = 1, error_function: Callable=variance_scaled_error, **kwargs):
+    def fit(self, X: np.array, y: np.array, N:int,  phi:np.array = 0.1, n:float = 1, error_function: Callable=variance_scaled_error, verbose:bool = False, **kwargs):
         """
             Accepts input vector X of size (m,p) and output vector of size (m,R) and iteratively runs
             the adaboost.mrt algorithm
@@ -81,7 +81,8 @@ class AdaboostMRT:
                 y (np.array): output array of shape mxR
                 N (int): number of items to sample from the data 
                 n (float): error power (1 for linear error, 2 for squared error, etc)
-                phi: (np.array): (Optional) Weighting array of shape (1,R), initialized to 0.6 for all 
+                phi (np.array): (Optional) Weighting array of shape (1,R), initialized to 0.6 for all
+                verbose (bool): (Optional, default False) whether to print out messages  
                 kwargs: optional parameters for the learners
         """
         self.n_iteration = 0 
@@ -95,7 +96,7 @@ class AdaboostMRT:
         X = self.reshape_input(X)
 
         self.D_t = np.ones((1,self.n_samples))/self.n_samples # sampling weight distribution
-        self.D_y = np.ones((1,self.n_samples))/self.m # output error distribution
+        self.D_y = np.ones((1,self.n_samples))/self.n_samples # output error distribution
         self.epsilon = np.zeros((self._num_outputs ,self.n_iterations))  # misclassification error rate
         self.beta_t = np.zeros((self._num_outputs ,self.n_iterations))  # weight updating parameter
 
@@ -103,6 +104,8 @@ class AdaboostMRT:
         for t in range(0,self.n_iterations):
             #TODO:  error check the D_t
             sample_idx = np.sort(weighted_sample(np.array(range(0, self.m)), self.N, self.D_t[0,]))
+            if verbose:
+                print(f'Unique samples indices: {len(np.unique(sample_idx))} out of {len(sample_idx)} from total data: {self.m}')
 
             # initialize and train learner
             sample_learner = self._base_learner(**kwargs)
