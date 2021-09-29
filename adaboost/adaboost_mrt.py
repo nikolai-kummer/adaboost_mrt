@@ -41,6 +41,7 @@ class AdaboostMRT:
     D_t: np.array = None  # sampling weight distribution for input characters
     D_r: np.array = None  # output weight distribution
     n_samples: int = None  # number of input samples
+    n_input_features: int = None # number of input features in x
     _learner_array: List = []  # list of base_learner arrays
 
     def __init__(self, base_learner: object, iterations: int = 10):
@@ -58,15 +59,19 @@ class AdaboostMRT:
         """Common function to reshpe X array into common shape for training
 
         Args:
-            input_x (Union[np.array,List]): input array or List
+            input_x (Union[np.array,List]): input array of shape [n_samples, n_features] or List (for n_features=1)
 
         Returns:
             np.array: output formatterd according to shape of (n_samples, n_features)
         """
         # Error checking on X input
         if isinstance(input_x, list):
-            input_x = np.array(input_x)
-        return input_x.reshape(-1,1)
+            input_x = np.array(input_x).reshape(-1,1)
+        elif isinstance(input_x, np.ndarray):
+            if input_x.ndim == 1:   # check for singleton
+                input_x=input_x.reshape(-1,1)
+
+        return input_x
 
 
 
@@ -85,15 +90,18 @@ class AdaboostMRT:
                 verbose (bool): (Optional, default False) whether to print out messages  
                 kwargs: optional parameters for the learners
         """
+        # Error checking on X input
+        X = self.reshape_input(X)
+
         self.n_iteration = 0 
         self.m = X.shape[0]
         self.n_samples = X.shape[0]
+        self.n_input_features = X.shape[1]
         self.N = N  # Number of items toasample from the data at each iteration
         self.n = n  # error power (raises the error to this power, 1 for linear, 2 for quadratic)
         self._num_outputs = 1 #y.shape[1], r parameter in paper
 
-        # Error checking on X input
-        X = self.reshape_input(X)
+        
 
         self.D_t = np.ones((1,self.n_samples))/self.n_samples # sampling weight distribution
         self.D_y = np.ones((1,self.n_samples))/self.n_samples # output error distribution
@@ -109,7 +117,7 @@ class AdaboostMRT:
 
             # initialize and train learner
             sample_learner = self._base_learner(**kwargs)
-            sample_learner.fit(X[sample_idx].reshape(-1,1), y[sample_idx])
+            sample_learner.fit(X[sample_idx], y[sample_idx])
             self._learner_array.append(sample_learner)
 
             # Calculate errors
