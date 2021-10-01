@@ -29,7 +29,7 @@ if __name__=='__main__':
     # train Adaboost.MRT
     n_iterations = 5
     amrt = AdaboostMRT(base_learner=MLPRegressor, iterations=n_iterations)
-    amrt.fit(x_train,y_train,N=2000,phi=0.2,n=2, hidden_layer_sizes = (10), max_iter=400, verbose=True)
+    amrt.fit(x_train,y_train,N=2000,phi=0.1,n=2, hidden_layer_sizes = (10), max_iter=900, verbose=True)
 
     # Apply to sample data
     for idx in range(0, n_iterations):
