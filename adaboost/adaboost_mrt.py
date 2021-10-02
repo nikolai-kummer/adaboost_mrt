@@ -33,7 +33,7 @@ class AdaboostMRT:
     # Initial Parameters
     _base_learner = None  # base learner object
     n_iterations: int = 10  # Parameter T from original paper
-    _phi: np.array = None  # Threshold parameter phi from original paper
+    phi: np.array = None  # Threshold parameter phi from original paper
 
     n_iteration: int = 0  # t parameter from original paper
     m: int = None  # Number of input samples
@@ -73,10 +73,34 @@ class AdaboostMRT:
 
         return input_x
 
+    def check_phi(self, new_phi:Union[np.ndarray, List, float])->np.ndarray:
+        """checks and reshapes the phi parameter to be appropiate
+
+        Args:
+            new_phi (Union[np.ndarray, List, float]): threshold parameter phi (vector or scalar)
+
+        Raises:
+            NotImplementedError: if phi is not one of np.ndarry, List, float
+
+        Returns:
+            np.ndarray: cleaned phi array in appropriate form
+        """
+        if isinstance(new_phi, float):
+            out_phi = np.array([new_phi]).reshape(1,-1)
+        elif isinstance(new_phi, list):
+            out_phi = np.array(new_phi).reshape(1,-1)
+        elif isinstance (new_phi, np.ndarray):
+            out_phi = new_phi.reshape(1,-1)
+        else:
+            raise NotImplementedError("phi must be either np.ndarry, List, float")
 
 
 
-    def fit(self, X: np.array, y: np.array, N:int,  phi:np.array = 0.1, n:float = 1, error_function: Callable=variance_scaled_error, verbose:bool = False, **kwargs):
+
+
+
+
+    def fit(self, X: np.array, y: np.array, N:int,  phi:Union[np.array, List, float] = 0.1, n:float = 1, error_function: Callable=variance_scaled_error, verbose:bool = False, **kwargs):
         """
             Accepts input vector X of size (m,p) and output vector of size (m,R) and iteratively runs
             the adaboost.mrt algorithm
@@ -92,6 +116,7 @@ class AdaboostMRT:
         """
         # Error checking on X input
         X = self.reshape_input(X)
+        self.phi = self.check_phi(phi)
 
         self.n_iteration = 0 
         self.m = X.shape[0]
