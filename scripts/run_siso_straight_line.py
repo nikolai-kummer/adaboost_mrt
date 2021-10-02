@@ -4,10 +4,12 @@ import warnings
 from adaboost.adaboost_mrt import AdaboostMRT
 from adaboost.error_functions import *
 from typing import Tuple
-from sklearn.exceptions import ConvergenceWarning
+from sklearn.exceptions import ConvergenceWarning,DataConversionWarning
 from sklearn.neural_network import MLPRegressor
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning) # ignore since we are artifically constraining convergence
+warnings.filterwarnings("ignore", category=DataConversionWarning)
+
 
 def generate_sample_line_data(min_x: float, max_x: float, n_items:int, noise_var:float)->Tuple[np.array, np.array]:
     x = np.random.uniform(min_x, max_x, n_items)

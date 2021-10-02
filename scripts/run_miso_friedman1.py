@@ -7,11 +7,12 @@ from numpy.core.fromnumeric import shape
 from adaboost.adaboost_mrt import AdaboostMRT
 from adaboost.error_functions import *
 from typing import Tuple
-from sklearn.exceptions import ConvergenceWarning
+from sklearn.exceptions import ConvergenceWarning,DataConversionWarning
 from sklearn.neural_network import MLPRegressor
 
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
+warnings.filterwarnings("ignore", category=DataConversionWarning)
 
 
 def generate_friedman1_data(n_items:int, noise_var:float=1.0)->Tuple[np.array, np.array]:
@@ -29,7 +30,7 @@ if __name__=='__main__':
     # train Adaboost.MRT
     n_iterations = 5
     amrt = AdaboostMRT(base_learner=MLPRegressor, iterations=n_iterations)
-    amrt.fit(x_train,y_train,N=2000,phi=0.1,n=2, hidden_layer_sizes = (10), max_iter=900, verbose=True)
+    amrt.fit(x_train,y_train,N=2000,phi=0.3,n=2, hidden_layer_sizes = (10), max_iter=900, verbose=True)
 
     # Apply to sample data
     for idx in range(0, n_iterations):

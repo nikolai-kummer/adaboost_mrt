@@ -73,6 +73,25 @@ class AdaboostMRT:
 
         return input_x
 
+
+    def reshape_output(self, input_y:Union[np.array,List])->np.array:
+        """Common function to reshpe X array into common shape for training
+
+        Args:
+            input_x (Union[np.array,List]): input array of shape [n_samples, n_features] or List (for n_features=1)
+
+        Returns:
+            np.array: output formatterd according to shape of (n_samples, n_features)
+        """
+        # Error checking on X input
+        if isinstance(input_y, list):
+            input_y = np.array(input_y).reshape(-1,1)
+        elif isinstance(input_y, np.ndarray):
+            if input_y.ndim == 1:   # check for singleton
+                input_y=input_y.reshape(-1,1)
+
+        return input_y
+
     def check_phi(self, new_phi:Union[np.ndarray, List, float])->np.ndarray:
         """checks and reshapes the phi parameter to be appropiate
 
@@ -93,10 +112,7 @@ class AdaboostMRT:
             out_phi = new_phi.reshape(1,-1)
         else:
             raise NotImplementedError("phi must be either np.ndarry, List, float")
-
-
-
-
+        return out_phi
 
 
 
@@ -116,27 +132,29 @@ class AdaboostMRT:
         """
         # Error checking on X input
         X = self.reshape_input(X)
+        y = self.reshape_output(y)
         self.phi = self.check_phi(phi)
 
         self.n_iteration = 0 
         self.m = X.shape[0]
         self.n_samples = X.shape[0]
         self.n_input_features = X.shape[1]
+        self.n_output_features = y.shape[1]  # r parameter in paper
         self.N = N  # Number of items toasample from the data at each iteration
         self.n = n  # error power (raises the error to this power, 1 for linear, 2 for quadratic)
-        self._num_outputs = 1 #y.shape[1], r parameter in paper
 
-        
+        # Error checking:
+        if not self.phi.shape[1] == self.n_output_features:
+            raise ValueError(f"phi must have the same length as number of output vectors. Required {self.n_output_features}, Encountered: {self.phi.shape[1]}")
 
-        self.D_t = np.ones((1,self.n_samples))/self.n_samples # sampling weight distribution
-        self.D_y = np.ones((1,self.n_samples))/self.n_samples # output error distribution
-        self.epsilon = np.zeros((self._num_outputs ,self.n_iterations))  # misclassification error rate
-        self.beta_t = np.zeros((self._num_outputs ,self.n_iterations))  # weight updating parameter
-
+        self.D_t = np.ones((self.n_samples,1))/self.n_samples # sampling weight distribution, picks samples
+        self.D_y = np.ones((self.n_samples, self.n_output_features))/self.n_samples # output error distribution 
+        self.epsilon = np.zeros((self.n_output_features ,self.n_iterations))  # misclassification error rate
+        self.beta_t = np.zeros((self.n_output_features ,self.n_iterations))  # weight updating parameter
 
         for t in range(0,self.n_iterations):
             #TODO:  error check the D_t
-            sample_idx = np.sort(weighted_sample(np.array(range(0, self.m)), self.N, self.D_t[0,]))
+            sample_idx = np.sort(weighted_sample(np.array(range(0, self.m)), self.N, self.D_t.flatten()))
             if verbose:
                 print(f'Unique samples indices: {len(np.unique(sample_idx))} out of {len(sample_idx)} from total data: {self.m}')
 
@@ -146,22 +164,25 @@ class AdaboostMRT:
             self._learner_array.append(sample_learner)
 
             # Calculate errors
-            y_predict = sample_learner.predict(X)
-            error_measure = absolute_relative_error(y_predict, y) # absolute relative error
-            ind_m = error_measure > phi
+            y_predict = self.reshape_output(sample_learner.predict(X))
+            error_measure = variance_scaled_error(y_predict, y) # absolute relative error
+            ind_m = error_measure > self.phi
 
             # Calculate the misclassigication error rate for every output variable
-            self.epsilon[:,t] = np.sum(self.D_y*ind_m)
+            self.epsilon[:,t] = np.sum(self.D_y*ind_m, axis=0)
 
             # Set the weight updating parameter
             self.beta_t[:,t] = self.epsilon[:,t]**self.n
 
             # Update the output error distribution
-            temp_b = np.ones(ind_m.shape)
-            temp_b[np.bitwise_not(ind_m)] = temp_b[np.bitwise_not(ind_m)] * self.beta_t[:,t]
+            temp_b = np.ones(ind_m.shape) * self.beta_t[:,t]
+            #temp_b[np.bitwise_not(ind_m)] = 1
+            temp_b[ind_m] = 1
+
+            #temp_b[np.bitwise_not(ind_m)] = temp_b[np.bitwise_not(ind_m)] * self.beta_t[:,t]
             self.D_y = self.D_y * temp_b
-            self.D_y = self.D_y * 1/np.sum(self.D_y)
-            self.D_t = np.mean(self.D_y, axis=0).reshape(-1,self.m)
+            self.D_y = self.D_y * 1/np.sum(self.D_y, axis=0)
+            self.D_t = np.mean(self.D_y, axis=1).reshape(-1,1)
 
 
     def predict(self, X:np.array) -> np.array:
@@ -176,7 +197,7 @@ class AdaboostMRT:
         # Error checking on X input
         X = self.reshape_input(X)
 
-        output = np.zeros(self._num_outputs,)
+        output = np.zeros(self.n_output_features,)
         for predictor in self._learner_array:
             output = output + predictor.predict(X)
 
@@ -204,7 +225,7 @@ class AdaboostMRT:
         # Error checking on X input
         X = self.reshape_input(X)
 
-        output = np.zeros(self._num_outputs,)
+        output = np.zeros(self.n_output_features,)
         learner_array = [self._learner_array[idx] for idx in learner_index] 
         for predictor in learner_array:
             output = output + predictor.predict(X)
