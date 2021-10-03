@@ -1,6 +1,6 @@
-# adaboost_mrt
+# Adaboost.MRT: Boosting regression for multivariate estimation
 
-This repo is a library with code for ***Adaboost.MRT: Boosting regression for multivariate estimation***
+This repo is a python library with code for Adaboost.MRT. An old matlab version was also added for archive purposes. 
 
 Adaboost.MRT is an ensemble multivariate regression extension of Adaboost.RT. It boosts the accuracy of a number of weak learners to create a single strong ensemble predictor.
 
