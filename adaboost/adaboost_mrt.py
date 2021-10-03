@@ -44,7 +44,7 @@ class AdaboostMRT:
     n_input_features: int = None # number of input features in x
     _learner_array: List = []  # list of base_learner arrays
 
-    def __init__(self, base_learner: object, iterations: int = 10):
+    def __init__(self, base_learner: object, iterations: int = 10)->None:
         """[summary]
 
         Args:
@@ -55,11 +55,14 @@ class AdaboostMRT:
         self._base_learner = base_learner
         self.n_iterations = iterations
 
-    def reshape_input(self, input_x:Union[np.array,List])->np.array:
+    def reshape_input(self, input_x:Union[np.ndarray,List])->np.ndarray:
         """Common function to reshpe X array into common shape for training
 
         Args:
             input_x (Union[np.array,List]): input array of shape [n_samples, n_features] or List (for n_features=1)
+
+        Raises:
+            NotImplementedError: if x is neither np.ndarray or List 
 
         Returns:
             np.array: output formatterd according to shape of (n_samples, n_features)
@@ -70,6 +73,8 @@ class AdaboostMRT:
         elif isinstance(input_x, np.ndarray):
             if input_x.ndim == 1:   # check for singleton
                 input_x=input_x.reshape(-1,1)
+        else: 
+            raise NotImplementedError(f"input_x must be any of [np.ndarray,List]. Received: {type(input_x)}")
 
         return input_x
 
@@ -165,21 +170,19 @@ class AdaboostMRT:
 
             # Calculate errors
             y_predict = self.reshape_output(sample_learner.predict(X))
-            error_measure = variance_scaled_error(y_predict, y) # absolute relative error
-            ind_m = error_measure > self.phi
+            error_measure = error_function(y_predict, y) # absolute relative error
+            ind_high_error = error_measure > self.phi
 
-            # Calculate the misclassigication error rate for every output variable
-            self.epsilon[:,t] = np.sum(self.D_y*ind_m, axis=0)
+            # Calculate the misclassification error rate for every output variable
+            self.epsilon[:,t] = np.sum(self.D_y*ind_high_error, axis=0)
 
             # Set the weight updating parameter
             self.beta_t[:,t] = self.epsilon[:,t]**self.n
 
             # Update the output error distribution
-            temp_b = np.ones(ind_m.shape) * self.beta_t[:,t]
-            #temp_b[np.bitwise_not(ind_m)] = 1
-            temp_b[ind_m] = 1
+            temp_b = np.ones(ind_high_error.shape) * self.beta_t[:,t]
+            temp_b[ind_high_error] = 1
 
-            #temp_b[np.bitwise_not(ind_m)] = temp_b[np.bitwise_not(ind_m)] * self.beta_t[:,t]
             self.D_y = self.D_y * temp_b
             self.D_y = self.D_y * 1/np.sum(self.D_y, axis=0)
             self.D_t = np.mean(self.D_y, axis=1).reshape(-1,1)
