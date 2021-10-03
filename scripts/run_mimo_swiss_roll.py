@@ -5,11 +5,12 @@ import warnings
 from adaboost.adaboost_mrt import AdaboostMRT
 from adaboost.error_functions import *
 from typing import Tuple
-from sklearn.exceptions import ConvergenceWarning
+from sklearn.exceptions import ConvergenceWarning, DataConversionWarning
 from sklearn.neural_network import MLPRegressor
 
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
+warnings.filterwarnings("ignore", category=DataConversionWarning)
 
 
 def generate_swiss_roll_data(n_items:int, noise_var:float)->Tuple[np.array, np.array]:
@@ -37,13 +38,13 @@ def generate_swiss_roll_data(n_items:int, noise_var:float)->Tuple[np.array, np.a
 
 if __name__=='__main__':
     noise_amplitude = 1
-    x_train, y_train = generate_swiss_roll_data(-5,5,200, noise_amplitude)
-    x_test, y_test = generate_swiss_roll_data(-5,5,100, 0.0)
+    x_train, y_train = generate_swiss_roll_data(500, noise_amplitude)
+    x_test, y_test = generate_swiss_roll_data(200, 0.0)
 
     # train Adaboost.MRT
     n_iterations = 10
     amrt = AdaboostMRT(base_learner=MLPRegressor, iterations=n_iterations)
-    amrt.fit(x_train,y_train,N=100,phi=0.1,n=2, hidden_layer_sizes = (20,20), max_iter=400, verbose=True)
+    amrt.fit(x_train,y_train,N=200,phi=[0.6, 0.2, 0.6],n=2, hidden_layer_sizes = (3), max_iter=400, verbose=True)
 
     # Apply to sample data
     for idx in range(0, n_iterations):
