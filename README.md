@@ -9,7 +9,7 @@ This repo is a python library with code for Adaboost.MRT based on the paper list
 The repo also contains an old original matlab version for archive purposes. 
 
 
-***Note:*** The original work outlined in the paper was done in Matlab and this git repo is an implementation of that procedure in python. Results may not be the same as the implementation of the base learners is different in Matlab and Python.
+***Note:*** The original work outlined in the paper was done in Matlab and this git repo is an implementation of that procedure in python. Results may not be the same as the implementation of the base learners is different in Matlab and Python. I have also not spend a lot of time tuning the parameters.
 
 ## Sample Usage
 The following is some sample code on how to run predictions:
