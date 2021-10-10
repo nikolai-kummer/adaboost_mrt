@@ -1,8 +1,12 @@
 # Adaboost.MRT: Boosting regression for multivariate estimation
 
-This repo is a python library with code for Adaboost.MRT. An old matlab version was also added for archive purposes. 
+This repo is a python library with code for Adaboost.MRT based on the paper listed in the Citations section. Adaboost.MRT is an ensemble multivariate regression extension of Adaboost.RT. It boosts the accuracy of a number of weak learners to create a single strong ensemble predictor. The following inputs are required:
+* threshold parameter _phi_
+* number of learners _T_ to learn sequentially
+* a base learner algorithm to the Adaboost.MRT constructor. The base learner must have a constructor, a fit(), and a predict() function
 
-Adaboost.MRT is an ensemble multivariate regression extension of Adaboost.RT. It boosts the accuracy of a number of weak learners to create a single strong ensemble predictor.
+
+The repo also contains an old original matlab version for archive purposes. 
 
 
 ***Note:*** The original work outlined in the paper was done in Matlab and this git repo is an implementation of that procedure in python. Results may not be the same as the implementation of the base learners is different in Matlab and Python.
