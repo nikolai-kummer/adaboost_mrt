@@ -48,7 +48,7 @@ class AdaboostMRT:
         """[summary]
 
         Args:
-            base_learner ([type]): base learner object that has a 
+            base_learner ([type]): base learner object that has a constructor, a fit, and a predict function
             iterations (int, optional): [description]. Defaults to 10.
         """
         # Check for base_learner properties
